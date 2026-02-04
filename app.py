@@ -119,47 +119,7 @@ if uploaded_file is not None:
                 
                 st.markdown("---")
 
-                # --- VISUALISASI BARIS 1 ---
-                st.subheader("Jenis Gangguan IT Berdasarkan Frekuensi Kejadian")
-
-                top_p = df_filtered['Problem_Clean'].value_counts().head(3).reset_index()
-
-                def wrap_text(text, width=30):
-                    return '<br>'.join(textwrap.wrap(text, width=width))
-
-                top_p['Problem_Clean_Wrapped'] = top_p['Problem_Clean'].apply(lambda x: wrap_text(x, width=30))
-
-                fig_p = px.bar(top_p, 
-                               x='count', 
-                               y='Problem_Clean_Wrapped', 
-                               orientation='h', 
-                               text='count', 
-                               color_discrete_sequence=['#1f4e78'], 
-                               labels={'count': 'Jumlah', 'Problem_Clean_Wrapped': 'Masalah'})
-
-                fig_p.update_layout(
-                    yaxis={
-                        'title': 'Masalah', 
-                        'categoryorder': 'total ascending', 
-                        'showline': True, 
-                        'linewidth': 2, 
-                        'linecolor': 'black',
-                        'automargin': True 
-                    },
-                    xaxis={
-                        'showline': True, 
-                        'linewidth': 2, 
-                        'linecolor': 'black', 
-                        'title': 'Jumlah Kasus'
-                    },
-                    showlegend=False,
-                    coloraxis_showscale=False,
-                    margin=dict(l=50, r=20, t=30, b=20), 
-                    height=600 
-                )
-                st.plotly_chart(fig_p, use_container_width=True)
-                st.markdown("---")
-
+                
                 # VISUALISASI 2: Distribusi Lokasi
                 st.subheader("Distribusi Gangguan IT Berdasarkan Lokasi")
                 top_l = df_filtered['Loc_Clean'].value_counts().head(3).reset_index()
@@ -183,6 +143,28 @@ if uploaded_file is not None:
                     legend_title_text='Daftar Lokasi'
                 )
                 st.plotly_chart(fig_l, use_container_width=True)
+                # --- TAMBAHAN: TABEL DETAIL GANGGUAN PADA TOP LOKASI ---
+                st.markdown("#### Detail Laporan pada Top Lokasi")
+                
+                # 1. Mengambil list nama lokasi yang masuk di visual Pie Chart (Top 3)
+                top_locations = top_l['Loc_Clean'].tolist()
+                
+                # 2. Filter data utama hanya untuk lokasi-lokasi tersebut
+                df_top_detail = df_filtered[df_filtered['Loc_Clean'].isin(top_locations)].copy()
+                
+                # 3. Sort (Urutkan) berdasarkan Lokasi agar muncul berturut-turut
+                df_top_detail = df_top_detail.sort_values(by=['Loc_Clean', 'Tanggal'])
+                
+                # 4. Merapikan format Tanggal (Hari-Bulan-Tahun)
+                df_top_detail['Tgl_Indo'] = df_top_detail['Tanggal'].dt.strftime('%d-%m-%Y')
+                
+                # 5. Pilih kolom: Lokasi, Permasalahan, Tanggal, Jam Mulai
+                tabel_final = df_top_detail[['Loc_Clean', 'Permasalahan', 'Tgl_Indo', 'Jam Mulai']]
+                tabel_final.columns = ['LOKASI', 'PERMASALAHAN', 'TANGGAL', 'JAM MULAI']
+                
+                # 6. Tampilkan Tabel
+                st.dataframe(tabel_final, use_container_width=True, hide_index=True)
+                
                 st.markdown("---")
 
                 # --- VISUALISASI BARIS 3 ---
@@ -281,7 +263,6 @@ if uploaded_file is not None:
                             <li>Sepanjang periode laporan, <b>Bulan {peak_month_name}</b> merupakan periode dengan tingkat gangguan tertinggi, yaitu sebanyak <b>{peak_month_val} kasus</b>.</li>
                             <li>Secara akumulatif, lokasi yang paling sering membutuhkan penanganan teknisi adalah <b>{top_loc}</b>.</li>
                             <li>Jam operasional yang paling krusial dengan frekuensi troubleshoot tertinggi terjadi pada pukul <b>{peak_time} WIB</b>.</li>
-                            <li>Masalah yang paling mendominasi infrastruktur IT selama semua periode adalah <b>{top_prob}</b>.</li>
                         </ul>
                     </div>
                     """, unsafe_allow_html=True)
@@ -317,7 +298,6 @@ if uploaded_file is not None:
                         <p>Berdasarkan dashboard visual di atas, dapat disimpulkan bahwa:</p>
                         <ul>
                             <li>Total aktivitas IT Support pada bulan {selected_month} adalah sebanyak <b>{total_skrg} kasus</b>. {prev_month_text}</li>
-                            <li>Masalah utama yang paling sering muncul dan menyita waktu operasional adalah <b>{top_prob}</b>.</li>
                             <li>Distribusi lokasi menunjukkan bahwa <b>{top_loc}</b> adalah area dengan tingkat laporan gangguan tertinggi.</li>
                             <li>Frekuensi gangguan cenderung meningkat pada jam sibuk, terutama pada pukul <b>{peak_time} WIB</b>.</li>
                         </ul>
