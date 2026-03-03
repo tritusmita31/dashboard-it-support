@@ -108,7 +108,7 @@ if uploaded_file is not None:
                 st.warning(f"⚠️ Tidak ada data ditemukan untuk periode {selected_month}.")
             else:
                 # --- KPI METRICS ---
-                st.markdown(f"### 📌 Ringkasan pada Bulan: {selected_month}")
+                st.markdown(f"### 📌 Rekap Bulan: {selected_month}")
                 kpi1, kpi2, kpi3 = st.columns(3)
                 
                 peak_h = df_filtered['Hour'].mode()[0] if not df_filtered['Hour'].mode().empty else 0
@@ -131,10 +131,10 @@ if uploaded_file is not None:
                                color_discrete_sequence=px.colors.qualitative.Safe,
                                labels={'Loc_Clean': 'Nama Lokasi', 'count': 'Jumlah Kasus'})
                 fig_l.update_traces(
-    textinfo='percent',
-    textfont_size=13,
-    textposition='inside'
-)
+                    textinfo='percent',
+                    textfont_size=13,
+                    textposition='inside'
+                    )
 
                 fig_l.update_traces(hovertemplate="<b>%{label}</b><br>Jumlah: %{value} Kasus<br>Persentase: %{percent}")
                 fig_l.update_layout(
@@ -237,7 +237,6 @@ if uploaded_file is not None:
                     
                 # --- 4. ANALISIS INSIGHT (DI AKHIR DASHBOARD) ---
                 st.markdown("---")
-                st.subheader("Analisis Insight")
 
                 # Menyiapkan variabel dasar
                 total_skrg = len(df_filtered)
@@ -303,6 +302,53 @@ if uploaded_file is not None:
                         </ul>
                     </div>
                     """, unsafe_allow_html=True) 
+
+
+                  # ===============================
+                  # TABEL LENGKAP DATA BULAN TERPILIH
+                  # ===============================
+                
+                st.subheader("Data Gangguan")
+
+                  # Copy agar aman dari perubahan
+                df_table_all = df_filtered.copy()
+
+                 # Format tanggal Indonesia
+                df_table_all['TANGGAL'] = df_table_all['Tanggal'].dt.strftime('%d-%m-%Y')
+
+                 # Pilih SEMUA kolom sesuai permintaan
+                tabel_lengkap = df_table_all[[
+                'TANGGAL',
+                'Laporan',
+                'Permasalahan',
+                'Penyelesaian',
+                'Material',
+                'Loc_Clean',
+                'Teknisi',
+                'Jam Mulai',
+                'Jam Selesai',
+                'Total Menit',
+                'Total Jam (HH:MM)'
+                ]]
+                tabel_lengkap.columns = [
+                'TANGGAL',
+                'LAPORAN',
+                'PERMASALAHAN',
+                'PENYELESAIAN',
+                'MATERIAL',
+                'LOKASI',
+                'TEKNISI',
+                'JAM MULAI',
+                'JAM SELESAI',
+                'TOTAL MENIT',
+                'TOTAL JAM (HH:MM)'
+                ]
+                # Urutkan berdasarkan tanggal & jam
+                tabel_lengkap = tabel_lengkap.sort_values(by=['TANGGAL', 'JAM MULAI'])
+
+                # Tampilkan
+            st.dataframe(tabel_lengkap, use_container_width=True, hide_index=True)
+            st.markdown("---")
 
     except Exception as e:
         st.error(f"Terjadi kesalahan pengolahan data: {e}")
